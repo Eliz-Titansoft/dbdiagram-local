@@ -42,6 +42,7 @@ Without `DBML_FILE` the page opens empty and asks for a file. Use **Open file**,
 - **Filter tables** keeps the tables whose name or column name contains the text. **Highlight column** marks matching columns on every table, which is the quick way to see where a column such as `customer_id` travels.
 - The **group** chips under the header work like mute and solo on a mixer. Click a chip to hide that group, click again to show it. Double-click, or Alt+click, to show only that group; a plain click on another chip then adds it. **All** brings every group back. Groups come from `TableGroup` blocks in the DBML. Without them, tables are grouped by the first word of their name.
 - The focus, hops, audit, keys-only, hidden-group, filter and selected-table settings are kept in the URL, so a link opens the same view for someone else.
+- Links carry crow's-foot ends: a fork on a many end, a bar on a one end. So many-to-one is a fork at the child and a bar at the parent, one-to-one has a bar at both ends, many-to-many a fork at both. Hover a link, or read the panel's reference lists, for the same in words.
 - Scroll or pinch to zoom, drag the background to pan, **Fit** brings the whole layout back into view. The diagram refits only when the set of shown tables changes, so toggling keys only or audit links keeps your zoom.
 
 If the file does not parse, the header shows the line and the message from the DBML parser, and the last good schema stays on screen.

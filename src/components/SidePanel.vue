@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { refsOf } from '../lib/graph'
+import { refsOf, relationFrom } from '../lib/graph'
 import type { Schema, Table } from '../lib/schema'
 
 const props = defineProps<{ schema: Schema; table: Table | null; drawer: boolean }>()
 const emit = defineEmits<{ go: [table: string]; focus: [table: string]; close: [] }>()
 
-const links = computed(() => (props.table ? refsOf(props.schema, props.table.name) : { outgoing: [], incoming: [] }))
+const links = computed(() => (props.table ? refsOf(props.schema, props.table.name) : { pointsAt: [], referencedBy: [] }))
 const enumOf = (type: string) => props.schema.enums.find((e) => e.name === type) ?? null
 </script>
 
@@ -52,18 +52,20 @@ const enumOf = (type: string) => props.schema.enums.find((e) => e.name === type)
         </ul>
       </template>
 
-      <h3>References out ({{ links.outgoing.length }})</h3>
+      <h3>Points at ({{ links.pointsAt.length }})</h3>
       <ul class="list">
-        <li v-for="r in links.outgoing" :key="r.id">
-          <span class="mono">{{ r.from.columns.join(', ') }}</span> →
-          <button class="link" @click="emit('go', r.to.table)">{{ r.to.table }}</button><span class="mono muted">.{{ r.to.columns.join(', ') }}</span>
+        <li v-for="r in links.pointsAt" :key="r.id">
+          <span class="mono">{{ r.to.columns.join(', ') }}</span> →
+          <button class="link" @click="emit('go', r.from.table)">{{ r.from.table }}</button><span class="mono muted">.{{ r.from.columns.join(', ') }}</span>
+          <span class="muted">, {{ relationFrom(r, table.name) }}</span>
         </li>
       </ul>
-      <h3>Referenced by ({{ links.incoming.length }})</h3>
+      <h3>Referenced by ({{ links.referencedBy.length }})</h3>
       <ul class="list">
-        <li v-for="r in links.incoming" :key="r.id">
-          <button class="link" @click="emit('go', r.from.table)">{{ r.from.table }}</button><span class="mono muted">.{{ r.from.columns.join(', ') }}</span>
-          → <span class="mono">{{ r.to.columns.join(', ') }}</span>
+        <li v-for="r in links.referencedBy" :key="r.id">
+          <button class="link" @click="emit('go', r.to.table)">{{ r.to.table }}</button><span class="mono muted">.{{ r.to.columns.join(', ') }}</span>
+          → <span class="mono">{{ r.from.columns.join(', ') }}</span>
+          <span class="muted">, {{ relationFrom(r, r.to.table) }}</span>
         </li>
       </ul>
     </template>

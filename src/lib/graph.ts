@@ -56,10 +56,26 @@ function neighbourhood(start: string, hops: number, refs: Ref[]): Set<string> {
   return seen
 }
 
-export function refsOf(schema: Schema, table: string): { outgoing: Ref[]; incoming: Ref[] } {
+// The parser puts the referenced table at the from end of every ref: from is the parent
+// (one), to is the table holding the foreign key (many, or one for a one-to-one).
+const side = (r: Ref['from']['relation']) => (r === '*' ? 'many' : 'one')
+
+// The cardinality in words, read from the parent to the child.
+export function relationWords(ref: Ref): string {
+  return `${side(ref.from.relation)} to ${side(ref.to.relation)}`
+}
+
+// The cardinality in words, read from `table`'s own end: "many to one" on the child.
+export function relationFrom(ref: Ref, table: string): string {
+  return ref.to.table === table ? `${side(ref.to.relation)} to ${side(ref.from.relation)}` : relationWords(ref)
+}
+
+// pointsAt: the refs this table's own columns hold. referencedBy: refs other tables hold
+// that point at this one.
+export function refsOf(schema: Schema, table: string): { pointsAt: Ref[]; referencedBy: Ref[] } {
   return {
-    outgoing: schema.refs.filter((r) => r.from.table === table),
-    incoming: schema.refs.filter((r) => r.to.table === table),
+    pointsAt: schema.refs.filter((r) => r.to.table === table),
+    referencedBy: schema.refs.filter((r) => r.from.table === table),
   }
 }
 

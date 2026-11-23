@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { groupColour } from '../lib/graph'
+import { groupColour, relationWords } from '../lib/graph'
 import { CARD_PADDING, HEADER_HEIGHT, ROW_HEIGHT, isKeyColumn, type Layout } from '../lib/layout'
 import type { Column, Table } from '../lib/schema'
 
@@ -126,9 +126,14 @@ function onCardKey(e: KeyboardEvent, name: string) {
     @pointerup="onPointerUp"
     @pointercancel="onPointerUp"
   >
+    <!-- Crow's-foot ends: a fork on a many end, a bar on a one end. auto-start-reverse points
+         the start marker back at its own table, so one definition serves both ends. -->
     <defs>
-      <marker id="many" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-        <path d="M0 0 L10 5 L0 10" fill="none" stroke="context-stroke" stroke-width="1.5" />
+      <marker id="many" viewBox="0 0 14 14" refX="14" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+        <path d="M0 7 L14 1 M0 7 L14 7 M0 7 L14 13" fill="none" stroke="context-stroke" stroke-width="1.4" />
+      </marker>
+      <marker id="one" viewBox="0 0 14 14" refX="11" refY="7" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+        <path d="M8 1 L8 13" fill="none" stroke="context-stroke" stroke-width="1.6" />
       </marker>
     </defs>
     <g :transform="transform">
@@ -139,9 +144,10 @@ function onCardKey(e: KeyboardEvent, name: string) {
           :d="edgePath(e.points)"
           class="edge"
           :class="{ hot: touchesSelected(e), dim: selected !== null && !touchesSelected(e) }"
-          marker-end="url(#many)"
+          :marker-start="e.ref.from.relation === '*' ? 'url(#many)' : 'url(#one)'"
+          :marker-end="e.ref.to.relation === '*' ? 'url(#many)' : 'url(#one)'"
         >
-          <title>{{ e.ref.from.table }}.{{ e.ref.from.columns.join(', ') }} ({{ e.ref.from.relation }}) to {{ e.ref.to.table }}.{{ e.ref.to.columns.join(', ') }} ({{ e.ref.to.relation }})</title>
+          <title>{{ e.ref.from.table }}.{{ e.ref.from.columns.join(', ') }} to {{ e.ref.to.table }}.{{ e.ref.to.columns.join(', ') }}: {{ relationWords(e.ref) }}</title>
         </path>
         <g
           v-for="n in layout.nodes"
