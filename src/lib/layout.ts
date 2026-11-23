@@ -2,7 +2,8 @@ import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.j
 import type { Ref, Table } from './schema'
 
 export const CARD_WIDTH = 260
-export const HEADER_HEIGHT = 30
+// Two lines: the table name, then its group in small type.
+export const HEADER_HEIGHT = 44
 export const ROW_HEIGHT = 20
 export const CARD_PADDING = 6
 

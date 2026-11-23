@@ -109,8 +109,8 @@ const flags = (c: Column) => [c.pk ? 'PK' : '', c.unique ? 'U' : '', c.notNull &
           <rect :width="n.width" :height="n.height" rx="6" class="card-bg" />
           <rect :width="n.width" :height="HEADER_HEIGHT" rx="6" :fill="colour(n.table)" />
           <rect :y="HEADER_HEIGHT - 6" :width="n.width" height="6" :fill="colour(n.table)" />
-          <text :x="10" :y="HEADER_HEIGHT / 2 + 5" class="card-title">{{ n.table.name }}</text>
-          <text :x="n.width - 10" :y="HEADER_HEIGHT / 2 + 5" class="card-group" text-anchor="end">{{ n.table.group }}</text>
+          <text :x="10" :y="19" class="card-title">{{ n.table.name }}</text>
+          <text :x="10" :y="35" class="card-group">{{ n.table.group }}</text>
           <g v-for="(c, i) in shownColumns(n.table)" :key="c.name" :class="{ hit: matches(c) }">
             <rect v-if="matches(c)" :y="rowY(i) - ROW_HEIGHT / 2" :width="n.width" :height="ROW_HEIGHT" class="row-hit" />
             <text :x="10" :y="rowY(i) + 4" class="col-name" :class="{ pk: c.pk }">{{ c.name }}</text>

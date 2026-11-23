@@ -4,6 +4,8 @@ A local, browser-based viewer for [DBML](https://dbml.dbdiagram.io/) schema file
 
 Nothing is hosted and nothing leaves your machine. The page runs on a Vite dev server on localhost and reads the DBML file from your disk.
 
+![The viewer showing the Midas schema: group chips across the top, the full diagram on the left, the enum list in the side panel](docs/screenshot.png)
+
 ## Setup
 
 You need Node.js 20 or newer.
