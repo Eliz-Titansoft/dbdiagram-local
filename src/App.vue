@@ -8,7 +8,7 @@ import { parseDbml, type ParseError, type Schema } from './lib/schema'
 
 // Where the DBML came from, for the header: the dev server's file, a picked file or
 // the bundled sample.
-const sourceName = ref('sample.dbml')
+const sourceName = ref('')
 const schema = ref<Schema | null>(null)
 const errors = ref<ParseError[]>([])
 
@@ -48,7 +48,8 @@ async function loadFromDevServer(): Promise<boolean> {
 }
 async function loadPublished(): Promise<boolean> {
   const res = await fetch(`${base}schema.dbml`, { cache: 'no-cache' })
-  if (!res.ok) return false
+  // A dev server answers a missing file with the app's index page, not a 404.
+  if (!res.ok || res.headers.get('content-type')?.includes('text/html')) return false
   load(await res.text(), 'schema.dbml')
   return true
 }
@@ -67,7 +68,9 @@ async function onDrop(e: DragEvent) {
 
 onMounted(async () => {
   readUrl()
-  if (!(await loadFromDevServer()) && !(await loadPublished())) await loadSample()
+  // With no file from the dev server or beside the page, the empty state asks for one
+  // rather than drawing a sample that could pass for real data.
+  if (!(await loadFromDevServer())) await loadPublished()
   if (import.meta.hot) import.meta.hot.on('dbml:changed', loadFromDevServer)
 })
 
@@ -158,7 +161,7 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
   <div class="app" @dragover.prevent @drop.prevent="onDrop">
     <header class="bar">
       <strong class="title">DBML viewer</strong>
-      <span class="source" :title="sourceName">{{ sourceName }}</span>
+      <span v-if="sourceName" class="source" :title="sourceName">{{ sourceName }}</span>
       <label class="file">
         Open file
         <input type="file" accept=".dbml,.txt" @change="openFile" />
@@ -179,7 +182,7 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
       </label>
       <button v-if="focus" class="chip" @click="clearFocus">focus: {{ focus }} ×</button>
       <button class="btn" @click="canvas?.fit()">Fit</button>
-      <span class="count">{{ counts.shown }} / {{ counts.all }} tables, {{ counts.refs }} links<template v-if="laying">, laying out...</template></span>
+      <span v-if="schema" class="count">{{ counts.shown }} / {{ counts.all }} tables, {{ counts.refs }} links<template v-if="laying">, laying out...</template></span>
     </header>
 
     <div v-if="groups.length > 1" class="groups">
@@ -204,9 +207,25 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
       </ul>
     </div>
 
-    <main class="main">
+    <main v-if="schema" class="main">
       <SchemaCanvas ref="canvas" :layout="layout" :groups="groups" :selected="selected" :highlight-column="highlightColumn" :compact="compact" @select="select" @focus="focusOn" />
-      <SidePanel v-if="schema" :schema="schema" :table="selectedTable" @go="select" @focus="focusOn" @close="selected = null" />
+      <SidePanel :schema="schema" :table="selectedTable" @go="select" @focus="focusOn" @close="selected = null" />
+    </main>
+    <main v-else class="main empty">
+      <div class="empty-card">
+        <h2>No schema loaded</h2>
+        <p>Open a <code>.dbml</code> file, or drop one anywhere on this page.</p>
+        <label class="file btn primary">
+          Open file
+          <input type="file" accept=".dbml,.txt" @change="openFile" />
+        </label>
+        <p class="muted">
+          Running locally? Start the dev server with <code>DBML_FILE=path/to/schema.dbml npm run dev</code> and the file loads by itself, and reloads when you save it.
+        </p>
+        <p class="muted">
+          Just looking? <button class="link" @click="loadSample">Try the sample schema</button>
+        </p>
+      </div>
     </main>
   </div>
 </template>
@@ -330,5 +349,53 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
   display: grid;
   grid-template-columns: 1fr 460px;
   min-height: 0;
+}
+.main.empty {
+  display: grid;
+  grid-template-columns: 1fr;
+  place-items: center;
+  background: var(--bg);
+}
+.empty-card {
+  max-width: 520px;
+  padding: 28px 32px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  text-align: center;
+}
+.empty-card h2 {
+  margin: 0 0 8px;
+  font: 600 18px/1.3 var(--sans);
+}
+.empty-card p {
+  margin: 8px 0;
+}
+.empty-card code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.empty-card .btn.primary {
+  display: inline-block;
+  margin: 10px 0;
+  padding: 6px 14px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+.link:hover {
+  text-decoration: underline;
 }
 </style>

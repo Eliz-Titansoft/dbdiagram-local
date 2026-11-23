@@ -1,4 +1,4 @@
-// A small sample so the viewer has something to draw before a file is loaded.
+// The small schema behind "Try the sample schema" on the empty page.
 // Run `DBML_FILE=path/to/schema.dbml npm run dev` to load a real file, or use Open file.
 
 Table users {

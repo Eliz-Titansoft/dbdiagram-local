@@ -30,7 +30,7 @@ $env:DBML_FILE = "..\midas\architecture\db-schema.txt"; npm run dev
 
 The page reloads the schema whenever the file is saved, so you can keep it open while editing the DBML.
 
-Without `DBML_FILE` the page opens with a small sample. Use **Open file** in the header, or drop a `.dbml` or `.txt` file on the page, to load any other schema.
+Without `DBML_FILE` the page opens empty and asks for a file. Use **Open file**, or drop a `.dbml` or `.txt` file anywhere on the page. **Try the sample schema** loads a small bundled example if you only want to see the viewer work.
 
 ## Using the viewer
 
@@ -67,7 +67,7 @@ Source layout:
 
 The `Pages` workflow builds the viewer on every push to `main`, once a day, and on demand, and publishes it at https://eliz-titansoft.github.io/dbdiagram-local/ with the Midas schema loaded. The page is public, and so is the schema it carries.
 
-The workflow reads `architecture/db-schema.txt` from the private Midas repo with a repository secret named `MIDAS_READ_TOKEN`: a fine-grained personal access token for the `Eliz-Titansoft` organisation with **Contents: read** on the `midas` repository and nothing else. Without the secret the site still deploys, with the sample schema only.
+The workflow reads `architecture/db-schema.txt` from the private Midas repo with a repository secret named `MIDAS_READ_TOKEN`: a fine-grained personal access token for the `Eliz-Titansoft` organisation with **Contents: read** on the `midas` repository and nothing else. Without the secret the site still deploys and opens empty, asking for a file.
 
 ```bash
 gh secret set MIDAS_READ_TOKEN -R Eliz-Titansoft/dbdiagram-local
@@ -79,7 +79,7 @@ gh secret set MIDAS_READ_TOKEN -R Eliz-Titansoft/dbdiagram-local
 npm run build
 ```
 
-`dist/` is a static page. It cannot read files from disk. It loads `schema.dbml` from beside itself when one is published there, otherwise it offers **Open file** and the sample. The dev server is the intended way to run the viewer against a file you are editing.
+`dist/` is a static page. It cannot read files from disk. It loads `schema.dbml` from beside itself when one is published there, otherwise it opens empty and asks for a file. The dev server is the intended way to run the viewer against a file you are editing.
 
 ## Notes on DBML
 
