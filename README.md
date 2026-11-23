@@ -1,0 +1,74 @@
+# dbdiagram-local
+
+A local, browser-based viewer for [DBML](https://dbml.dbdiagram.io/) schema files. It is built for schemas that are too big to read as one picture: pick a table, see only its neighbours, hide the audit links that turn every diagram into a star around `users`, and read the notes next to the columns they describe.
+
+Nothing is hosted and nothing leaves your machine. The page runs on a Vite dev server on localhost and reads the DBML file from your disk.
+
+## Setup
+
+You need Node.js 20 or newer.
+
+```bash
+git clone https://github.com/Eliz-Titansoft/dbdiagram-local.git
+cd dbdiagram-local
+npm install
+```
+
+## Run
+
+Point the dev server at a DBML file and open the printed URL, usually http://localhost:5173.
+
+```bash
+# Git Bash, macOS, Linux
+DBML_FILE=../midas/architecture/db-schema.txt npm run dev
+
+# PowerShell
+$env:DBML_FILE = "..\midas\architecture\db-schema.txt"; npm run dev
+```
+
+The page reloads the schema whenever the file is saved, so you can keep it open while editing the DBML.
+
+Without `DBML_FILE` the page opens with a small sample. Use **Open file** in the header, or drop a `.dbml` or `.txt` file on the page, to load any other schema.
+
+## Using the viewer
+
+- **Click** a table to read its columns, notes, indexes and references in the side panel. Links in the panel jump to the related table.
+- **Double-click** a table, or press **Focus** in the panel, to show only that table and its neighbours. **hops** widens the neighbourhood to two or three links. The **focus** chip in the header clears it.
+- **hide audit links** is on by default. It hides every reference from a `*_by` column to the users table, such as `created_by` and `updated_by`, so the diagram shows the data model and not the audit trail.
+- **keys only** draws each table with only its primary key and `*_id` columns, which keeps a wide schema readable.
+- **Filter tables** keeps the tables whose name or column name contains the text. **Highlight column** marks matching columns on every table, which is the quick way to see where a column such as `customer_id` travels.
+- The **group** chips under the header switch whole groups off and on. Groups come from `TableGroup` blocks in the DBML. Without them, tables are grouped by the first word of their name.
+- The focus, hops, audit and keys-only settings are kept in the URL, so a link opens the same view for someone else.
+- Scroll to zoom, drag the background to pan, **Fit** brings the whole layout back into view.
+
+If the file does not parse, the header shows the line and the message from the DBML parser, and the last good schema stays on screen.
+
+## How it works
+
+- [`@dbml/core`](https://github.com/holistics/dbml) parses the DBML in the browser. It is the open-source parser behind dbdiagram.io.
+- [`elkjs`](https://github.com/kieler/elkjs) lays the tables out as a layered graph with orthogonal edges.
+- Vue 3 and Vite render the result as plain SVG. There is no canvas library and no diagram framework to learn.
+
+Source layout:
+
+| Path | What it holds |
+|---|---|
+| `src/lib/schema.ts` | DBML parsing into the viewer's own flat model |
+| `src/lib/graph.ts` | Focus neighbourhood, audit-link rule, group colours |
+| `src/lib/layout.ts` | The ELK layout call and card sizing |
+| `src/components/SchemaCanvas.vue` | The SVG drawing, pan and zoom |
+| `src/components/SidePanel.vue` | Table detail |
+| `src/App.vue` | Loading, view state, the header controls |
+| `vite.config.ts` | The `DBML_FILE` dev-server plugin |
+
+## Build
+
+```bash
+npm run build
+```
+
+`dist/` is a static page. It cannot read files from disk, so it only offers **Open file** and the sample. The dev server is the intended way to run the viewer.
+
+## Notes on DBML
+
+The parser is strict about a few things dbdiagram.io tolerates. In particular, an apostrophe inside a single-quoted note must be written `\'`, not doubled SQL-style as `''`.

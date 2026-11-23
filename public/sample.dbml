@@ -1,0 +1,76 @@
+// A small sample so the viewer has something to draw before a file is loaded.
+// Run `DBML_FILE=path/to/schema.dbml npm run dev` to load a real file, or use Open file.
+
+Table users {
+  id integer [pk, increment]
+  email varchar [unique]
+}
+
+Table customers {
+  id integer [pk, increment]
+  name varchar
+  created_by integer [ref: > users.id]
+}
+
+Table orders {
+  id integer [pk, increment]
+  order_no varchar [unique]
+  customer_id integer [ref: > customers.id]
+  weight_gm decimal
+  status order_status
+  created_by integer [ref: > users.id]
+  updated_by integer [ref: > users.id]
+
+  Note: 'The finance order. One opening proforma, many price fixes.'
+}
+
+Table trade_fixes {
+  id integer [pk, increment]
+  fix_no varchar [unique]
+  weight_gm decimal
+  price_myr_per_gm decimal
+}
+
+Table order_fix_allocations {
+  id integer [pk, increment]
+  order_id integer [ref: > orders.id]
+  trade_fix_id integer [ref: - trade_fixes.id, unique, note: 'one order per fix']
+  weight_gm decimal
+  created_by integer [ref: > users.id]
+}
+
+Table prepayment_requests {
+  id integer [pk, increment]
+  request_no varchar [unique, note: 'PI- on a sales order']
+  order_id integer [ref: > orders.id]
+  amount_myr decimal
+  covered_at_raise_myr decimal [null, note: 'set on a top-up']
+  created_by integer [ref: > users.id]
+}
+
+Table invoices {
+  id integer [pk, increment]
+  invoice_no varchar [unique]
+  customer_id integer [ref: > customers.id]
+  amount_myr decimal
+  created_by integer [ref: > users.id]
+}
+
+Table invoice_lines {
+  id integer [pk, increment]
+  invoice_id integer [ref: > invoices.id]
+  order_id integer [ref: > orders.id]
+  order_fix_allocation_id integer [ref: - order_fix_allocations.id]
+}
+
+Table prepayment_applications {
+  id integer [pk, increment]
+  prepayment_request_id integer [ref: > prepayment_requests.id]
+  invoice_id integer [ref: > invoices.id]
+  amount_myr decimal
+}
+
+Enum order_status {
+  Active
+  Cancelled
+}
