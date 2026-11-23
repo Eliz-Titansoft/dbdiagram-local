@@ -39,8 +39,8 @@ Without `DBML_FILE` the page opens with a small sample. Use **Open file** in the
 - **hide audit links** is on by default. It hides every reference from a `*_by` column to the users table, such as `created_by` and `updated_by`, so the diagram shows the data model and not the audit trail.
 - **keys only** draws each table with only its primary key and `*_id` columns, which keeps a wide schema readable.
 - **Filter tables** keeps the tables whose name or column name contains the text. **Highlight column** marks matching columns on every table, which is the quick way to see where a column such as `customer_id` travels.
-- The **group** chips under the header switch whole groups off and on. Groups come from `TableGroup` blocks in the DBML. Without them, tables are grouped by the first word of their name.
-- The focus, hops, audit and keys-only settings are kept in the URL, so a link opens the same view for someone else.
+- The **group** chips under the header work like mute and solo on a mixer. Click a chip to hide that group, click again to show it. Double-click, or Alt+click, to show only that group; a plain click on another chip then adds it. **All** brings every group back. Groups come from `TableGroup` blocks in the DBML. Without them, tables are grouped by the first word of their name.
+- The focus, hops, audit, keys-only and hidden-group settings are kept in the URL, so a link opens the same view for someone else.
 - Scroll to zoom, drag the background to pan, **Fit** brings the whole layout back into view.
 
 If the file does not parse, the header shows the line and the message from the DBML parser, and the last good schema stays on screen.
@@ -63,13 +63,23 @@ Source layout:
 | `src/App.vue` | Loading, view state, the header controls |
 | `vite.config.ts` | The `DBML_FILE` dev-server plugin |
 
+## Hosted copy on GitHub Pages
+
+The `Pages` workflow builds the viewer on every push to `main`, once a day, and on demand, and publishes it at https://eliz-titansoft.github.io/dbdiagram-local/ with the Midas schema loaded. The page is public, and so is the schema it carries.
+
+The workflow reads `architecture/db-schema.txt` from the private Midas repo with a repository secret named `MIDAS_READ_TOKEN`: a fine-grained personal access token for the `Eliz-Titansoft` organisation with **Contents: read** on the `midas` repository and nothing else. Without the secret the site still deploys, with the sample schema only.
+
+```bash
+gh secret set MIDAS_READ_TOKEN -R Eliz-Titansoft/dbdiagram-local
+```
+
 ## Build
 
 ```bash
 npm run build
 ```
 
-`dist/` is a static page. It cannot read files from disk, so it only offers **Open file** and the sample. The dev server is the intended way to run the viewer.
+`dist/` is a static page. It cannot read files from disk. It loads `schema.dbml` from beside itself when one is published there, otherwise it offers **Open file** and the sample. The dev server is the intended way to run the viewer against a file you are editing.
 
 ## Notes on DBML
 

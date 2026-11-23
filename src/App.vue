@@ -36,14 +36,24 @@ function load(source: string, name: string) {
   if (selected.value && !result.schema.tables.some((t) => t.name === selected.value)) selected.value = null
 }
 
+// Three places a schema can come from, tried in order: the dev server's DBML_FILE, a
+// schema.dbml published next to the page (the GitHub Pages build drops one in), then
+// the bundled sample.
+const base = import.meta.env.BASE_URL
 async function loadFromDevServer(): Promise<boolean> {
-  const res = await fetch('/__dbml')
+  const res = await fetch(`${base}__dbml`)
   if (!res.ok) return false
   load(await res.text(), res.headers.get('X-Dbml-File') ?? 'DBML_FILE')
   return true
 }
+async function loadPublished(): Promise<boolean> {
+  const res = await fetch(`${base}schema.dbml`, { cache: 'no-cache' })
+  if (!res.ok) return false
+  load(await res.text(), 'schema.dbml')
+  return true
+}
 async function loadSample() {
-  const res = await fetch('/sample.dbml')
+  const res = await fetch(`${base}sample.dbml`)
   load(await res.text(), 'sample.dbml')
 }
 async function openFile(e: Event) {
@@ -57,17 +67,32 @@ async function onDrop(e: DragEvent) {
 
 onMounted(async () => {
   readUrl()
-  if (!(await loadFromDevServer())) await loadSample()
+  if (!(await loadFromDevServer()) && !(await loadPublished())) await loadSample()
   if (import.meta.hot) import.meta.hot.on('dbml:changed', loadFromDevServer)
 })
 
 const groups = computed(() => schema.value?.groups ?? [])
 const shownGroups = computed(() => (hiddenGroups.value.size ? new Set(groups.value.filter((g) => !hiddenGroups.value.has(g))) : null))
+// The chips work like a mixer's mute and solo: click hides or shows one group, double-click
+// or Alt+click shows only that group, and All brings every group back. In solo, a plain
+// click on another chip adds it to the shown set.
 function toggleGroup(g: string) {
   const next = new Set(hiddenGroups.value)
   if (next.has(g)) next.delete(g)
   else next.add(g)
   hiddenGroups.value = next
+}
+function soloGroup(g: string) {
+  const others = groups.value.filter((x) => x !== g)
+  const alreadySolo = others.length === hiddenGroups.value.size && others.every((x) => hiddenGroups.value.has(x))
+  hiddenGroups.value = alreadySolo ? new Set() : new Set(others)
+}
+function showAllGroups() {
+  hiddenGroups.value = new Set()
+}
+function onGroupClick(e: MouseEvent, g: string) {
+  if (e.altKey) soloGroup(g)
+  else toggleGroup(g)
 }
 
 const visible = computed(() =>
@@ -112,14 +137,16 @@ function readUrl() {
   hops.value = Number(p.get('hops') ?? 1) || 1
   hideAudit.value = p.get('audit') !== '1'
   compact.value = p.get('compact') === '1'
+  hiddenGroups.value = new Set((p.get('hide') ?? '').split(',').filter(Boolean))
   selected.value = p.get('focus')
 }
-watch([focus, hops, hideAudit, compact], () => {
+watch([focus, hops, hideAudit, compact, hiddenGroups], () => {
   const p = new URLSearchParams()
   if (focus.value) p.set('focus', focus.value)
   if (hops.value !== 1) p.set('hops', String(hops.value))
   if (!hideAudit.value) p.set('audit', '1')
   if (compact.value) p.set('compact', '1')
+  if (hiddenGroups.value.size) p.set('hide', [...hiddenGroups.value].join(','))
   const qs = p.toString()
   history.replaceState(null, '', qs ? `?${qs}` : location.pathname)
 })
@@ -156,7 +183,18 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
     </header>
 
     <div v-if="groups.length > 1" class="groups">
-      <button v-for="g in groups" :key="g" class="group" :class="{ off: hiddenGroups.has(g) }" @click="toggleGroup(g)">{{ g }}</button>
+      <button v-if="hiddenGroups.size" class="group all" title="Show every group" @click="showAllGroups">All</button>
+      <button
+        v-for="g in groups"
+        :key="g"
+        class="group"
+        :class="{ off: hiddenGroups.has(g) }"
+        title="Click to hide or show. Double-click or Alt+click to show only this group."
+        @click="onGroupClick($event, g)"
+        @dblclick.prevent="soloGroup(g)"
+      >
+        {{ g }}
+      </button>
     </div>
 
     <div v-if="errors.length" class="errors">
@@ -270,6 +308,11 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
 .group.off {
   opacity: 0.4;
   text-decoration: line-through;
+}
+.group.all {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-family: var(--sans);
 }
 .errors {
   padding: 8px 12px;

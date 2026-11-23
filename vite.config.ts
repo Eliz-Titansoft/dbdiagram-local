@@ -31,6 +31,8 @@ function dbmlFile(): Plugin {
   }
 }
 
+// GitHub Pages serves a project site under /<repo>/, so the Pages build sets BASE_PATH.
 export default defineConfig({
+  base: process.env.BASE_PATH ?? '/',
   plugins: [vue(), dbmlFile()],
 })
