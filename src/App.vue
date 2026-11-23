@@ -324,6 +324,9 @@ const counts = computed(() => ({ shown: visible.value?.tables.length ?? 0, all: 
   margin: 4px 0 0;
 }
 .main {
+  /* Pinned to the 1fr row: the groups and errors rows are conditional, so without this
+     the canvas would slide up into an auto row and take only its content's height. */
+  grid-row: 4;
   display: grid;
   grid-template-columns: 1fr 460px;
   min-height: 0;
