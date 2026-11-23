@@ -1,11 +1,12 @@
 import ELK, { type ElkNode, type ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js'
 import type { Ref, Table } from './schema'
 
-export const CARD_WIDTH = 260
-// Two lines: the table name, then its group in small type.
-export const HEADER_HEIGHT = 44
-export const ROW_HEIGHT = 20
-export const CARD_PADDING = 6
+// Card metrics. Rows carry 12px type, so 22px keeps them readable at a 0.8 zoom.
+export const CARD_WIDTH = 300
+// Two lines: the table name, then its group.
+export const HEADER_HEIGHT = 48
+export const ROW_HEIGHT = 22
+export const CARD_PADDING = 8
 
 export interface Placed {
   table: Table
@@ -27,8 +28,10 @@ export interface Layout {
   height: number
 }
 
+export const isKeyColumn = (name: string, pk: boolean) => pk || name.endsWith('_id')
+
 export function cardHeight(table: Table, compact: boolean): number {
-  const rows = compact ? table.columns.filter((c) => c.pk || c.name.endsWith('_id')).length : table.columns.length
+  const rows = compact ? table.columns.filter((c) => isKeyColumn(c.name, c.pk)).length : table.columns.length
   return HEADER_HEIGHT + rows * ROW_HEIGHT + CARD_PADDING
 }
 

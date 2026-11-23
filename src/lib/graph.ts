@@ -29,7 +29,9 @@ export function visibleGraph(schema: Schema, options: ViewOptions): { tables: Ta
   if (options.focus) {
     const names = new Set(tables.map((t) => t.name))
     const keep = neighbourhood(options.focus, options.hops, refs.filter((r) => names.has(r.from.table) && names.has(r.to.table)))
-    keep.add(options.focus)
+    // A filter that rules out the focus table itself leaves nothing, so the page can say so.
+    if (q && !names.has(options.focus)) keep.clear()
+    else keep.add(options.focus)
     tables = schema.tables.filter((t) => keep.has(t.name))
   }
   const shown = new Set(tables.map((t) => t.name))
@@ -61,9 +63,15 @@ export function refsOf(schema: Schema, table: string): { outgoing: Ref[]; incomi
   }
 }
 
-// A stable colour per group, spread round the hue wheel in group order.
+// Card header colours, one per group in group order. Each is dark enough for white text
+// at 4.5:1 and neighbours differ in hue, not only in lightness, so sixteen groups still
+// tell apart. Past the end the list repeats.
+const GROUP_PALETTE = [
+  '#1a5cad', '#9a4708', '#0b6b63', '#6d28d9', '#b42318', '#00702f', '#be185d', '#0e7490',
+  '#92400e', '#1d4ed8', '#166534', '#9f1239', '#4d7c0f', '#5b21b6', '#7c2d12', '#115e59',
+  '#3f6212', '#7e22ce',
+]
 export function groupColour(group: string, groups: string[]): string {
   const i = Math.max(0, groups.indexOf(group))
-  const hue = Math.round((i * 137.508) % 360)
-  return `hsl(${hue} 55% 45%)`
+  return GROUP_PALETTE[i % GROUP_PALETTE.length]
 }

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# impeccable critique snapshots and live-server scratch
+.impeccable/

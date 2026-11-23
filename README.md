@@ -34,14 +34,15 @@ Without `DBML_FILE` the page opens empty and asks for a file. Use **Open file**,
 
 ## Using the viewer
 
-- **Click** a table to read its columns, notes, indexes and references in the side panel. Links in the panel jump to the related table.
-- **Double-click** a table, or press **Focus** in the panel, to show only that table and its neighbours. **hops** widens the neighbourhood to two or three links. The **focus** chip in the header clears it.
+- **Click** a table, or Tab to it and press Enter, to read its columns, notes, indexes and references in the side panel. Links in the panel jump to the related table. Below about 900px the panel opens as a sheet over the diagram.
+- **Double-click** a table, Shift+Enter on it, or press **Focus** in the panel, to show only that table and its neighbours. The focused table carries a **focus** badge. **hops** widens the neighbourhood to two or three links. The **focus** chip in the header clears it.
+- **Keys**: `/` jumps to the filter, `F` or Ctrl+0 fits the diagram, `+` and `-` zoom, Escape closes the panel, then clears the focus.
 - **hide audit links** is on by default. It hides every reference from a `*_by` column to the users table, such as `created_by` and `updated_by`, so the diagram shows the data model and not the audit trail.
 - **keys only** draws each table with only its primary key and `*_id` columns, which keeps a wide schema readable.
 - **Filter tables** keeps the tables whose name or column name contains the text. **Highlight column** marks matching columns on every table, which is the quick way to see where a column such as `customer_id` travels.
 - The **group** chips under the header work like mute and solo on a mixer. Click a chip to hide that group, click again to show it. Double-click, or Alt+click, to show only that group; a plain click on another chip then adds it. **All** brings every group back. Groups come from `TableGroup` blocks in the DBML. Without them, tables are grouped by the first word of their name.
-- The focus, hops, audit, keys-only and hidden-group settings are kept in the URL, so a link opens the same view for someone else.
-- Scroll to zoom, drag the background to pan, **Fit** brings the whole layout back into view.
+- The focus, hops, audit, keys-only, hidden-group, filter and selected-table settings are kept in the URL, so a link opens the same view for someone else.
+- Scroll or pinch to zoom, drag the background to pan, **Fit** brings the whole layout back into view. The diagram refits only when the set of shown tables changes, so toggling keys only or audit links keeps your zoom.
 
 If the file does not parse, the header shows the line and the message from the DBML parser, and the last good schema stays on screen.
 
